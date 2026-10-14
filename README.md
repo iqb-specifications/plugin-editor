@@ -59,7 +59,7 @@ Sobald eine Bearbeitung der Unit-Definition stattgefunden hat, meldet der Editor
 * `unitDefinition`: Dieser String enthält die neue Unit-Definition sowie deren Typ.
 * `unitDefinitionType`: Diese Angabe soll anderen Anwendungen helfen, Missverständnisse bei der Interpretation der Unit-Definition zu vermeiden. 
 * `dependenciesToPlay`, `dependenciesToEdit`: Diese Einträge beschreiben Abhängigkeiten von externen Bibliotheken oder Diensten für das Editieren oder Abspielen der Unit. Dies kann der Prüfung der Testinhalte auf Vollständigkeit dienen. Wird hier z. B. GeoGebra genannt, kann eine Warnung ausgegeben werden, wenn dieses Softwarepaket nicht verfügbar ist.
-* `sharedParameters`: Daten, die zur Laufzeit zwischen Editor-Modulen ausgetauscht werden sollen. Details siehe [hier](../intro/shared-parameters.qmd).
+* `sharedParameters`: Daten, die zur Laufzeit zwischen Editor-Modulen ausgetauscht werden sollen. Details siehe [hier](https://iqb-specifications.github.io/concepts/plugins/communication.html#gemeinsame-parameter-sharedparameters).
 
 Zum Parameter `variables` bitte [hier informieren](https://iqb-specifications.github.io/concepts/plugins/variable-info.html).
 
