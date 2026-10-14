@@ -1,11 +1,8 @@
 asyncapi: 2.5.0
 info:
-  title: "Verona Interfaces Specification 'Editor'"
+  title: TBA Plugin Specification "Editor"
   version: "5.0.0"
-  description: |
-    This is one of the [TBA Plugins](https://iqb-specifications.github.io/concepts/plugins/). An editor is an user 
-    interface to create/change the UI definition of a TBA unit. The html page MUST contain a script-tag with metadata. 
-    The syntax and structure of this data are described [here](https://iqb-specifications.github.io/concepts/plugins/metadata.html).
+  description: This is one part of the [TBA Plugin Standards](https://iqb-specifications.github.io/concepts/plugins/).
 
   license:
     name: CC0-1.0

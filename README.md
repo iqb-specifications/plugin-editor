@@ -1,22 +1,66 @@
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0%201.0-lightgrey.svg)](http://creativecommons.org/publicdomain/zero/1.0/)
 
-# TBA Plugin: Specification for Editor
+This repo is part of the tba specifications and focuses on the specification of player plugin.
 
-In order to understand TBA Plugins, please go
-to [TBA Plugins Introduction](https://iqb-specifications.github.io/concepts/plugins/)!
+[Docs](https://iqb-specifications.github.io/concepts/plug-ins) (German only)
 
-Read the spec here:
-* [Html-Document](https://iqb-specifications.github.io/plugin-editor)
-* [AsyncApi source yaml](editorapi.yaml). Please note: The data structure `variable-info` is [externally specified](https://iqb-specifications.github.io/variable-info/).
+## release notes
+
+Please see the [release section](https://github.com/iqb-specifications/plugin-editor/releases) of this repository to learn about changes.
 
 ## For Contributors
-This api is written as [async api](https://www.asyncapi.com/de) yaml file. After committing to main branch, a GitHub action is triggered to build the html page. Don't forget to update the version and the release notes in `README.md`. Then, create an release.
 
-If you like to check the html page before committing to main branch, 
+This api is written as [async api](https://www.asyncapi.com/de) yaml file. After committing to main branch, a GitHub action is triggered to build the html page. Create an release with release notes.
 
-* have an npm/node.js-environment installed
-* check out the repo
-* run `npm install`
-* run the `generate` script in package.json.
+For a human readable version of the spec [see here](https://iqb-specifications.github.io/plugin-editor).
 
-After that, you can check `docs/index.html` in a browser. This file will be ignored by git.
+# Kommunikation
+
+```mermaid
+sequenceDiagram
+    autonumber
+participant HA as Host-Anwendung
+    participant VM as Editor (TBA-Plugin)
+    HA->>VM:Initialisierung
+    VM->>HA:voeReadyNotification
+    HA->>VM:voeStartCommand
+    loop
+        VM->>HA:voeDefinitionChangedNotification
+    end
+```
+::: {#spec}
+
+# 1 Initialisierung
+
+Der Host richtet ein `<iframe>`-Element ein und setzt für das `srcdoc`-Attribut den kompletten Inhalt des Moduls. Das Modul ist technisch eine Html-Seite, d. h. es wird durch das Laden auch die Ausführung von JavaScript-Code angestoßen, der auf oberster Ebene vorgesehen ist.
+
+# 2 Ready Notification
+
+Dieser Code sendet als letzten Schritt der eigenen Initialisierung eine Nachricht an den Host, dass das Modul bereit sei für das Start-Kommando. Als Payload wird das [Metadaten-Objekt](https://iqb-specifications.github.io/concepts/plugins/metadata.html) mitgeschickt -- hier allerdings als String serialisiert, um nicht bei jeder Änderung der Metadaten-Spezifikation alle Modul-API ändern zu müssen.
+
+# 3 Start Command
+
+Nachdem der Host die Bereitschaftsmeldung erhalten hat, schickt er die wichtigen Informationen zur Unit und startet so die Beaarbeitung:
+
+* `sessionId`: Dem Editor wird vom Host mit `sessionId` eine Kennung mitgeschickt, die der Editor anschließend in jeder Nachricht über die Änderung der Unit-Definition verwenden soll. Damit wird die korrekte Zuordnung der Nachricht bzw. der darin enthaltenen Daten zur Unit unterstützt. Diese ID ist wichtiger, wenn es mehrere Editoren pro Seite beim Host gibt, die gleichzeitig verwaltet werden sollen.
+* `unitDefinition`: Wenn es bereits eine Bearbeitung gab, dann schickt der Host die vorherigen Unit-Definition. Sie beschreibt das Erscheinungsbild der Unit und ggf. die Interaktionselemente. Es kann einfacher Text sein, aber auch kompexe Datenstrukturen -- dann serialisiert als String. Dann stellt der Editor für die erste Seite alle Elemente dar, die in der Unit-Definition vorgesehen sind und bereitet die Oberfläche vor.
+* `unitDefinitionType`: Diese Angabe soll dem Editor helfen, Missverständnisse bei der Interpretation der Unit-Definition zu vermeiden. Aus Sicht der Host-Anwendung ist es jedoch wichtiger, Namen und Version des erforderlichen Editors zu kennen. Wenn bekannt ist, dass Editor `XY@3.5` für diese Unit-Definition sinnvollerweise benutzt werden sollte, dann muss der Host diesen Editor besorgen. Dann spielt der Typ der Unit-Definition eine untergeordnete Rolle.
+* `editorConfig`:
+  - `directDownloadUrl`: Sollte der Editor während der Laufzeit Code nachladen müssen, kann aus Gründen der Datensicherheit nicht einfach irgendein Server genutzt werden. Dem Editor muss mitgeteilt werden, welche URL dafür zulässig ist. Beispiel: GeoGebra.
+  - `role`: Es kann gewünscht sein, dass nicht für alle Bearbeiter\*innen alle Funktionen des Editors gleichermaßen zur Verfügung stehen. Ungeübte fühlen sich eventuell erschlagen von der Fülle der Parameter und nehmen ungünstige Änderungen vor. Die Rolle, die dem Editor hier mitgeteilt wird, variiert die Benutzeroberfläche. Mögliche Werte sind `GUEST`, `COMMENTATOR`, `DEVELOPER`, `MAINTAINER`, `SUPER` (abnehmende Beschränkungen).
+  - `sharedParameters`: Daten, die zur Laufzeit zwischen Editor-Modulen ausgetauscht werden sollen. Details siehe [hier](https://iqb-specifications.github.io/concepts/plugins/communication.html#gemeinsame-parameter-sharedparameters).
+
+# 4 Definition Changed Notification
+
+Sobald eine Bearbeitung der Unit-Definition stattgefunden hat, meldet der Editor diese Änderung. Parameter:
+
+* `sessionId`: Dem Editor wurde im Start-Kommando eine `sessionId` eine Kennung mitgeschickt, die der Editor anschließend in jeder Nachricht verwendet. Damit wird die korrekte Zuordnung der Nachricht bzw. der darin enthaltenen Daten zur Unit unterstützt.
+* `timestamp`: Ein String im Standard-Format [date-time](https://tc39.es/ecma262/multipage/numbers-and-dates.html#sec-date-time-string-format). Die Nutzung dieser Information ist dem Host überlassen, soll aber vor allem die korrekte Reihenfolge vieler asynchron eintreffenden Nachrichten sicherstellen.
+* `unitDefinition`: Dieser String enthält die neue Unit-Definition sowie deren Typ.
+* `unitDefinitionType`: Diese Angabe soll anderen Anwendungen helfen, Missverständnisse bei der Interpretation der Unit-Definition zu vermeiden. 
+* `dependenciesToPlay`, `dependenciesToEdit`: Diese Einträge beschreiben Abhängigkeiten von externen Bibliotheken oder Diensten für das Editieren oder Abspielen der Unit. Dies kann der Prüfung der Testinhalte auf Vollständigkeit dienen. Wird hier z. B. GeoGebra genannt, kann eine Warnung ausgegeben werden, wenn dieses Softwarepaket nicht verfügbar ist.
+* `sharedParameters`: Daten, die zur Laufzeit zwischen Editor-Modulen ausgetauscht werden sollen. Details siehe [hier](../intro/shared-parameters.qmd).
+
+Zum Parameter `variables` bitte [hier informieren](https://iqb-specifications.github.io/concepts/plugins/variable-info.html).
+
+:::
