@@ -155,11 +155,11 @@ components:
           type: string
           example: "https://www.iqb-studio.de/download/iskeid-34e845-didmmemdkek"
         role:
-          description: Specifies the access level of the editing person ('super' = maximal)
+          description: Specifies the access level of the editing person ('SUPER' = maximal)
           type: string
           enum:
             - GUEST
-            - COMMENTATOR
+            - COMMENTER
             - DEVELOPER
             - MAINTAINER
             - SUPER
